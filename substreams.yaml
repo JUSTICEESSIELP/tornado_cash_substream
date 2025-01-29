@@ -1,0 +1,50 @@
+specVersion: v0.1.0
+package:
+  name: tornado_cash_analytics
+  version: v0.1.0
+  url: https://github.com/your-org/tornado-substreams
+  doc: Analytics for Tornado Cash ZK pools
+
+imports:
+  ethcommon: https://spkg.io/streamingfast/ethereum-common-v0.3.0.spkg
+
+protobuf:
+  files:
+    - tornado.proto
+  importPaths:
+    - ./proto
+  excludePaths:
+    - sf/substreams
+    - google
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: target/wasm32-unknown-unknown/release/substreams.wasm
+
+modules:
+  - name: store_deposits
+    kind: store
+    initialBlock: 16800166
+    updatePolicy: set:proto
+    valueType: proto:tornado.v1.DepositMetrics
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+
+  - name: store_withdrawals
+    kind: store
+    initialBlock: 16800166
+    updatePolicy: set:proto
+    valueType: proto:tornado.v1.WithdrawalMetrics
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+
+  - name: map_pool_stats
+    kind: map
+    initialBlock: 16800166
+    inputs:
+      - store: store_deposits
+      - store: store_withdrawals
+    output:
+      type: proto:tornado.v1.PoolStats
+
