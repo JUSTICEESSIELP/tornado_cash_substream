@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ethabi = "17"
+ethers = "2.0.14"
 hex-literal = "0.3.4"
 num-bigint = "0.4"
 num-traits = "0.2.15"
@@ -16,6 +17,7 @@ prost = "0.13.3"
 prost-types = "0.13.3"
 substreams = "0.6.0"
 substreams-ethereum = "0.10.2"
+
 
 # Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
 [target.wasm32-unknown-unknown.dependencies]
