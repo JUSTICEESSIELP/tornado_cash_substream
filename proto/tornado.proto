@@ -1,43 +1,53 @@
 syntax = "proto3";
 
-package tornado.v1;
+package tornado.types.v1;
 
 // Import timestamp for time-based fields
 import "google/protobuf/timestamp.proto";
 
-// Core event messages
+message DepositMetrics {
+    uint64 total_deposits = 1;
+    uint64 total_withdrawals = 2;
+    uint64 total_fees = 3;
+    repeated RelayerMetrics relayer_metrics = 4;
+}
+
+message RelayerMetrics {
+    string address = 1;
+    uint64 total_withdrawals = 2;
+    uint64 total_fees = 3;
+    uint64 max_fee = 4;
+}
+
 message Deposit {
     bytes commitment = 1;
-    uint32 leaf_index = 2;
+    uint64 leaf_index = 2;
     uint64 timestamp = 3;
 }
 
 message Withdrawal {
-    string recipient = 1;          // Ethereum address as hex string
+    bytes to = 1;
     bytes nullifier_hash = 2;
-    string relayer = 3;           // Ethereum address as hex string
-    string fee = 4;               // Using string for precise amounts
+    bytes relayer = 3;
+    uint64 fee = 4;
 }
 
-// Aggregated metrics
-message DepositMetrics {
-    uint64 total_deposits = 1;
-    uint64 unique_commitments = 2;
-    map<string, uint64> deposits_by_hour = 3;  // ISO timestamp -> count
+// Store model messages for different metric types
+message TimeBasedMetrics {
+    uint64 hour = 1;
+    uint64 day = 2;
+    uint64 deposit_count = 3;
+    uint64 withdrawal_count = 4;
 }
 
-message WithdrawalMetrics {
-    uint64 total_withdrawals = 1;
-    uint64 unique_nullifiers = 2;
-    string total_fees = 3;        // Using string for precise sum
-    map<string, uint64> withdrawals_by_hour = 4;  // ISO timestamp -> count
+message UniqueIdentifiers {
+    repeated bytes commitments = 1;
+    repeated bytes nullifier_hashes = 2;
 }
 
-// Combined pool statistics
-message PoolStats {
-    uint64 total_deposits = 1;
-    uint64 total_withdrawals = 2;
-    string total_fees = 3;        // Using string for precise amounts
-    double average_time_between_deposit_withdrawal = 4;  // In seconds
-    map<string, uint64> active_relayers = 5;  // Relayer address -> count
+message RelayerActivity {
+    bytes relayer_address = 1;
+    uint64 withdrawal_count = 2;
+    uint64 total_fees = 3;
+    repeated bytes recipient_addresses = 4;
 }
