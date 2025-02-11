@@ -4,3 +4,4 @@
 debug.log
 replay.log
 .env
+./subgraph/build
