@@ -23,33 +23,26 @@ binaries:
     file: target/wasm32-unknown-unknown/release/substreams.wasm
 
 modules:
-  - name: store_additive_metrics
-    kind: store
-    initialBlock: 16800166
-    updatePolicy: add
-    valueType: int64
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_unique_identifiers
-    kind: store
-    initialBlock: 16800166
-    updatePolicy: add
-    valueType: int64
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-
-  - name: store_max_values
-    kind: store
-    initialBlock: 16800166
-    updatePolicy: add
-    valueType: int64
-    inputs:
-      - source: sf.ethereum.type.v2.Block
-  
-  - name: map_tornado_metrics
+  - name: tornado_event_mapper
     kind: map
+    initialBlock: 12724620
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:tornado.DepositMetrics
+      type: proto:tornado.types.v1.TornadoEvents
+
+  - name: store_additive_metrics
+    kind: store
+    initialBlock: 12724620
+    updatePolicy: add
+    valueType: int64
+    inputs:
+      - map: tornado_event_mapper
+
+  - name: map_store_metrics
+    kind: map
+    initialBlock: 12724620
+    inputs:
+      - store: store_additive_metrics
+    output:
+      type: proto:tornado.types.v1.PoolMetrics
