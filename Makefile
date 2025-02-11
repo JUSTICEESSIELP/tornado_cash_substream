@@ -21,3 +21,7 @@ protogen:
 .PHONY: pack
 pack: build
 	substreams pack substreams.yaml
+
+.PHONY graph_auth
+graph_auth: 
+	graph auth --studio e48e546c9d7d775ba6e4d7b439bccd49

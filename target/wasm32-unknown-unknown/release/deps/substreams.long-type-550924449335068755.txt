@@ -1,0 +1,1 @@
+substreams_database_change::tables::Tables

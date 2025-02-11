@@ -6,6 +6,8 @@ package:
   doc: Analytics for Tornado Cash ZK pools
 
 imports:
+  graph: https://github.com/streamingfast/substreams-sink-subgraph/releases/download/v0.1.0/substreams-sink-subgraph-protodefs-v0.1.0.spkg
+  entities: https://github.com/streamingfast/substreams-sink-entity-changes/releases/download/v1.3.0/substreams-sink-entity-changes-v1.3.0.spkg
   ethcommon: https://spkg.io/streamingfast/ethereum-common-v0.3.0.spkg
 
 protobuf:
@@ -46,3 +48,12 @@ modules:
       - store: store_additive_metrics
     output:
       type: proto:tornado.types.v1.PoolMetrics
+
+  - name: graph_out
+    kind: map
+    initialBlock: 12724620
+    inputs:
+      - map: map_store_metrics
+      - map: tornado_event_mapper
+    output:
+      type: proto:sf.substreams.entity.v1.EntityChanges

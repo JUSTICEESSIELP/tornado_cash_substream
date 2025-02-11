@@ -35,11 +35,25 @@ pub mod sf {
             }
         }
         pub mod sink {
+            pub mod entity {
+                // @@protoc_insertion_point(attribute:sf.substreams.sink.entity.v1)
+                pub mod v1 {
+                    include!("sf.substreams.sink.entity.v1.rs");
+                    // @@protoc_insertion_point(sf.substreams.sink.entity.v1)
+                }
+            }
             pub mod service {
                 // @@protoc_insertion_point(attribute:sf.substreams.sink.service.v1)
                 pub mod v1 {
                     include!("sf.substreams.sink.service.v1.rs");
                     // @@protoc_insertion_point(sf.substreams.sink.service.v1)
+                }
+            }
+            pub mod subgraph {
+                // @@protoc_insertion_point(attribute:sf.substreams.sink.subgraph.v1)
+                pub mod v1 {
+                    include!("sf.substreams.sink.subgraph.v1.rs");
+                    // @@protoc_insertion_point(sf.substreams.sink.subgraph.v1)
                 }
             }
         }

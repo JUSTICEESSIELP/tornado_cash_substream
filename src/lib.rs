@@ -2,7 +2,11 @@ mod pb;
 mod abi;
 use substreams::store::StoreNew;
 use substreams::store::{StoreAdd, StoreAddInt64, StoreGet, StoreGetInt64, StoreMaxInt64, StoreSetString};
-use num_bigint::BigUint; // Import BigUint
+use num_bigint::BigUint; 
+// Import BigUint
+
+
+use substreams_entity_change::{pb::entity::EntityChanges, tables::Tables};
 // use substreams_ethereum::pb::sf::ethereum::r#type::v2 as eth;
 use substreams_ethereum::pb::eth::v2 as eth;
 use hex_literal::hex;
@@ -171,6 +175,42 @@ pub fn map_store_metrics(
         total_withdrawals,
         total_fees,
     })
+}
+
+#[substreams::handlers::map]
+pub fn graph_out(poolStats: PoolMetrics, events:TornadoEvents) -> Result<EntityChanges, substreams::errors::Error> {
+    // hash map of name to a table
+    let mut tables = Tables::new();
+
+   // Create Pool Stats Entity
+   tables
+   .create_row("PoolStats", "pool_stats")
+   .set("totalDeposits", poolStats.total_deposits)
+   .set("totalWithdrawals", poolStats.total_withdrawals)
+   .set("totalFees", poolStats.total_fees);
+
+   for deposit in events.deposits {
+    tables
+        .create_row("Deposit", &deposit.hash) // Using hash as unique ID
+        .set("commitment", deposit.commitment)
+        .set("blockNumber", deposit.block_number)
+        .set("timestamp", deposit.block_time.unwrap().seconds)
+        .set("amount", deposit.amount)
+        .set("from", deposit.from);
+}
+ 
+
+for withdrawal in events.withdrawals {
+    tables
+        .create_row("Withdrawal", &withdrawal.nullifier_hash) // Using nullifier_hash as unique ID
+        .set("to", withdrawal.to)
+        .set("relayer", withdrawal.relayer)
+        .set("fee", withdrawal.fee)
+        .set("blockNumber", withdrawal.block_number)
+        .set("timestamp", withdrawal.block_time.unwrap().seconds);
+}
+
+Ok(tables.to_entity_changes())
 }
 // #[substreams::handlers::store]
 // fn store_unique_identifiers(block: &Block, store: StoreSetString) {

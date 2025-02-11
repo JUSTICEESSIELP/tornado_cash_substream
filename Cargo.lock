@@ -3263,6 +3263,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "substreams-database-change"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "06fe88d25f4c3d56fc2a92583708dc34822ea99fb3f96609f9d684f717974b27"
+dependencies = [
+ "prost 0.13.4",
+ "prost-types 0.13.4",
+ "substreams",
+]
+
+[[package]]
+name = "substreams-entity-change"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0587b8d5dd7bffb0415d544c31e742c4cabdb81bbe9a3abfffff125185e4e9e8"
+dependencies = [
+ "base64 0.13.1",
+ "prost 0.13.4",
+ "prost-types 0.13.4",
+ "substreams",
+]
+
+[[package]]
 name = "substreams-ethereum"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4339,6 +4362,8 @@ dependencies = [
  "prost-types 0.13.4",
  "regex",
  "substreams",
+ "substreams-database-change",
+ "substreams-entity-change",
  "substreams-ethereum",
 ]
 
