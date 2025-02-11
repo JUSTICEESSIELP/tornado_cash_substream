@@ -25,3 +25,7 @@ pack: build
 .PHONY graph_auth
 graph_auth: 
 	graph auth --studio e48e546c9d7d775ba6e4d7b439bccd49
+
+.PHONY git_ssh
+git_ssh:
+	ssh-keygen -t rsa -b 4096 -C "justicessiel@gmail.com" 
