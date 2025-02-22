@@ -1,4 +1,11 @@
 // @generated
+pub mod chainlink {
+    // @@protoc_insertion_point(attribute:chainlink.v1)
+    pub mod v1 {
+        include!("chainlink.v1.rs");
+        // @@protoc_insertion_point(chainlink.v1)
+    }
+}
 pub mod sf {
     pub mod ethereum {
         pub mod r#type {
@@ -20,6 +27,13 @@ pub mod sf {
     pub mod substreams {
         include!("sf.substreams.rs");
         // @@protoc_insertion_point(sf.substreams)
+        pub mod entity {
+            // @@protoc_insertion_point(attribute:sf.substreams.entity.v1)
+            pub mod v1 {
+                include!("sf.substreams.entity.v1.rs");
+                // @@protoc_insertion_point(sf.substreams.entity.v1)
+            }
+        }
         pub mod ethereum {
             // @@protoc_insertion_point(attribute:sf.substreams.ethereum.v1)
             pub mod v1 {

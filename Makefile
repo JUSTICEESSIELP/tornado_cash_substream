@@ -1,6 +1,6 @@
 ENDPOINT ?= mainnet.eth.streamingfast.io:443
-START_BLOCK ?= 12724620
-STOP_BLOCK ?= +1000
+START_BLOCK ?= 12724681
+STOP_BLOCK ?= +10000
 
 .PHONY: build
 build:
@@ -8,11 +8,11 @@ build:
 
 .PHONY: run
 run: build
-	substreams run -e $(ENDPOINT) substreams.yaml map_store_metrics -s $(START_BLOCK) -t $(STOP_BLOCK)
+	substreams run -e $(ENDPOINT) substreams.yaml graph_out -s $(START_BLOCK) -t $(STOP_BLOCK)
 
 .PHONY: gui
 gui: build
-	substreams gui -e $(ENDPOINT) substreams.yaml map_store_metrics -s $(START_BLOCK) -t $(STOP_BLOCK)
+	substreams gui -e $(ENDPOINT) substreams.yaml graph_out -s $(START_BLOCK) -t $(STOP_BLOCK)
 
 .PHONY: protogen
 protogen:
@@ -21,11 +21,3 @@ protogen:
 .PHONY: pack
 pack: build
 	substreams pack substreams.yaml
-
-.PHONY graph_auth
-graph_auth: 
-	graph auth --studio e48e546c9d7d775ba6e4d7b439bccd49
-
-.PHONY git_ssh
-git_ssh:
-	ssh-keygen -t rsa -b 4096 -C "justicessiel@gmail.com" 

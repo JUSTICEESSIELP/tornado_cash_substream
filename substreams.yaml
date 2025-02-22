@@ -1,14 +1,15 @@
 specVersion: v0.1.0
 package:
   name: tornado_cash_analytics
-  version: v0.1.0
-  url: https://github.com/your-org/tornado-substreams
+  version: v0.2.0
+  url: https://github.com/JUSTICEESSIELP/tornado_cash_substream
   doc: Analytics for Tornado Cash ZK pools
 
 imports:
   graph: https://github.com/streamingfast/substreams-sink-subgraph/releases/download/v0.1.0/substreams-sink-subgraph-protodefs-v0.1.0.spkg
   entities: https://github.com/streamingfast/substreams-sink-entity-changes/releases/download/v1.3.0/substreams-sink-entity-changes-v1.3.0.spkg
   ethcommon: https://spkg.io/streamingfast/ethereum-common-v0.3.0.spkg
+  chainlink_prices: https://github.com/Graph-BuildersDAO/substreams/releases/download/chainlink-prices-v1.0.2/chainlink-price-substream-v1.0.2.spkg
 
 protobuf:
   files:
@@ -27,33 +28,36 @@ binaries:
 modules:
   - name: tornado_event_mapper
     kind: map
-    initialBlock: 12724620
+    initialBlock: 12724681
     inputs:
       - source: sf.ethereum.type.v2.Block
+      - store: chainlink_prices:chainlink_price_store
     output:
       type: proto:tornado.types.v1.TornadoEvents
 
   - name: store_additive_metrics
     kind: store
-    initialBlock: 12724620
+    initialBlock: 12724681
     updatePolicy: add
     valueType: int64
     inputs:
       - map: tornado_event_mapper
-
-  - name: map_store_metrics
-    kind: map
-    initialBlock: 12724620
-    inputs:
-      - store: store_additive_metrics
-    output:
-      type: proto:tornado.types.v1.PoolMetrics
-
+      
   - name: graph_out
     kind: map
-    initialBlock: 12724620
+    initialBlock: 12724681
     inputs:
-      - map: map_store_metrics
       - map: tornado_event_mapper
+      - store: store_additive_metrics
     output:
       type: proto:sf.substreams.entity.v1.EntityChanges
+
+network: mainnet
+
+networks:
+  mainnet:
+    initialBlock:
+      chainlink_prices:store_confirmed_feeds: 12720020
+      chainlink_prices:get_chainlink_answers: 12720020
+      chainlink_prices:chainlink_price_store: 12720020
+      chainlink_prices:graph_out: 12720020

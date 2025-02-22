@@ -1,9 +1,7 @@
 type PoolStats @entity {
   id: ID!
-  totalDeposits: BigInt!
-  totalWithdrawals: BigInt!
-  totalFees: BigInt!
-
+  totalDepositsInDollars: BigInt!
+  totalWithdrawalsInDollars: BigInt!
 }
 
 type Deposit @entity {
@@ -13,6 +11,7 @@ type Deposit @entity {
   timestamp: BigInt!
   amount: String!
   from: String!
+  usdc_amount:String!
 }
 
 type Withdrawal @entity {
@@ -22,4 +21,7 @@ type Withdrawal @entity {
   fee: String!
   blockNumber: BigInt!
   timestamp: BigInt!
+  withdraw_eth_amount: String!
+  withdraw_usdc_amount: String!
 }
+

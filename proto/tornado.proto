@@ -9,18 +9,6 @@ message TornadoEvents {
     repeated Withdrawal withdrawals = 2;
 }
 
-message PoolMetrics {
-    int64 total_deposits = 1;
-    int64 total_withdrawals = 2;
-    int64 total_fees = 3;
-}
-
-message RelayerMetrics {
-    string address = 1;
-    uint64 total_withdrawals = 2;
-    uint64 total_fees = 3;
-    uint64 max_fee = 4;
-}
 
 message Deposit {
     string commitment = 1; // Changed to string for hex encoding
@@ -30,6 +18,7 @@ message Deposit {
     string amount = 5;
     string from = 6;
     string hash = 7;
+    string usdc_amount = 8;
 }
 
 message Withdrawal {
@@ -38,6 +27,9 @@ message Withdrawal {
     string relayer = 3;        // Changed to string for hex encoding
     string fee = 4;
     uint64 block_number = 5;
-   google.protobuf.Timestamp block_time = 6;  // Use int64 for timestamp seconds
+    google.protobuf.Timestamp block_time = 6;  // Use int64 for timestamp seconds
     uint32 log_index = 7;
+    string amount = 8;
+    string usdc_amount = 9;
+    
 }

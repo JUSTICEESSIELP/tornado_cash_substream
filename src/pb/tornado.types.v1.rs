@@ -9,28 +9,6 @@ pub struct TornadoEvents {
     pub withdrawals: ::prost::alloc::vec::Vec<Withdrawal>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct PoolMetrics {
-    #[prost(int64, tag="1")]
-    pub total_deposits: i64,
-    #[prost(int64, tag="2")]
-    pub total_withdrawals: i64,
-    #[prost(int64, tag="3")]
-    pub total_fees: i64,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerMetrics {
-    #[prost(string, tag="1")]
-    pub address: ::prost::alloc::string::String,
-    #[prost(uint64, tag="2")]
-    pub total_withdrawals: u64,
-    #[prost(uint64, tag="3")]
-    pub total_fees: u64,
-    #[prost(uint64, tag="4")]
-    pub max_fee: u64,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Deposit {
     /// Changed to string for hex encoding
@@ -49,6 +27,8 @@ pub struct Deposit {
     pub from: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub hash: ::prost::alloc::string::String,
+    #[prost(string, tag="8")]
+    pub usdc_amount: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -71,5 +51,9 @@ pub struct Withdrawal {
     pub block_time: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(uint32, tag="7")]
     pub log_index: u32,
+    #[prost(string, tag="8")]
+    pub amount: ::prost::alloc::string::String,
+    #[prost(string, tag="9")]
+    pub usdc_amount: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)
