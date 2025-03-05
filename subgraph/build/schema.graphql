@@ -1,27 +1,32 @@
 type PoolStats @entity {
-  id: ID!
-  totalDepositsInDollars: BigInt!
-  totalWithdrawalsInDollars: BigInt!
+  id: ID! # "pool_stats"
+  totalDepositsInDollars: String!
+  totalWithdrawalsInDollars: String!
 }
 
 type Deposit @entity {
-  id: ID!
+  id: ID! # Transaction hash
   commitment: String!
   blockNumber: BigInt!
   timestamp: BigInt!
-  amount: String!
+  eth_amount: String!
   from: String!
-  usdc_amount:String!
+  usdc_amount: String!
 }
 
 type Withdrawal @entity {
-  id: ID!
+  id: ID! # Transaction hash
+  nullifier_hash: String!
   to: String!
   relayer: String!
   fee: String!
   blockNumber: BigInt!
   timestamp: BigInt!
-  withdraw_eth_amount: String!
-  withdraw_usdc_amount: String!
+  eth_amount: String!
+  usdc_amount: String!
 }
 
+type Relayer @entity {
+  id: ID! # Relayer address
+  withdrawal: Withdrawal! # Reference to the Withdrawal entity
+}

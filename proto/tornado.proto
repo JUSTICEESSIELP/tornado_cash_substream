@@ -15,9 +15,9 @@ message Deposit {
     uint64 block_number = 2;
     google.protobuf.Timestamp block_time = 3; // Use int64 for timestamp seconds
     uint32 log_index = 4;
-    string amount = 5;
+    string eth_amount = 5;
     string from = 6;
-    string hash = 7;
+    string txn_hash = 7;
     string usdc_amount = 8;
 }
 
@@ -29,7 +29,8 @@ message Withdrawal {
     uint64 block_number = 5;
     google.protobuf.Timestamp block_time = 6;  // Use int64 for timestamp seconds
     uint32 log_index = 7;
-    string amount = 8;
+    string eth_amount = 8;
     string usdc_amount = 9;
+    string txn_hash = 10;
     
 }

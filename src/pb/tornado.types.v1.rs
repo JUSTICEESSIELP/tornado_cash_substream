@@ -22,11 +22,11 @@ pub struct Deposit {
     #[prost(uint32, tag="4")]
     pub log_index: u32,
     #[prost(string, tag="5")]
-    pub amount: ::prost::alloc::string::String,
+    pub eth_amount: ::prost::alloc::string::String,
     #[prost(string, tag="6")]
     pub from: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
-    pub hash: ::prost::alloc::string::String,
+    pub txn_hash: ::prost::alloc::string::String,
     #[prost(string, tag="8")]
     pub usdc_amount: ::prost::alloc::string::String,
 }
@@ -52,8 +52,10 @@ pub struct Withdrawal {
     #[prost(uint32, tag="7")]
     pub log_index: u32,
     #[prost(string, tag="8")]
-    pub amount: ::prost::alloc::string::String,
+    pub eth_amount: ::prost::alloc::string::String,
     #[prost(string, tag="9")]
     pub usdc_amount: ::prost::alloc::string::String,
+    #[prost(string, tag="10")]
+    pub txn_hash: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)
