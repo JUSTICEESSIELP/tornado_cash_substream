@@ -295,8 +295,8 @@ pub fn graph_out(
 
     tables
     .create_row("PoolStats", "pool_stats")
-    .set("totalDepositsInDollars", total_deposits.to_string())
-    .set("totalWithdrawalsInDollars", total_withdrawals.to_string());
+    .set("totalDepositsInDollars", total_deposits)
+    .set("totalWithdrawalsInDollars", total_withdrawals);
   
 
 
@@ -327,8 +327,8 @@ pub fn graph_out(
             .set("usdc_amount",withdrawal.usdc_amount);
 
         tables
-            .create_row("Relayer", &withdrawal.relayer)
-            .set("withdrawal", &withdrawal.txn_hash);
+            .create_row("Relayer", &withdrawal.relayer);
+            
 
 
     }

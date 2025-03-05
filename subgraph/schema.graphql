@@ -1,10 +1,10 @@
-type PoolStats @entity {
-  id: ID! # "pool_stats"
-  totalDepositsInDollars: String!
-  totalWithdrawalsInDollars: String!
+type PoolStats @entity  {
+  id: ID!
+  totalDepositsInDollars: BigDecimal!
+  totalWithdrawalsInDollars: BigDecimal!
 }
 
-type Deposit @entity {
+type Deposit @entity(immutable: true) {
   id: ID! # Transaction hash
   commitment: String!
   blockNumber: BigInt!
@@ -14,19 +14,22 @@ type Deposit @entity {
   usdc_amount: String!
 }
 
-type Withdrawal @entity {
+type Withdrawal @entity(immutable: true) {
   id: ID! # Transaction hash
   nullifier_hash: String!
   to: String!
-  relayer: String!
+  relayer: Relayer!
   fee: String!
   blockNumber: BigInt!
   timestamp: BigInt!
   eth_amount: String!
   usdc_amount: String!
+ 
 }
 
-type Relayer @entity {
-  id: ID! # Relayer address
-  withdrawal: Withdrawal! # Reference to the Withdrawal entity
+
+type Relayer @entity { 
+  id:ID!
+  withdrawal:[Withdrawal!]! @derivedFrom(field: "relayer")
 }
+

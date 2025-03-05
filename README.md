@@ -1,50 +1,92 @@
-<a href="https://www.streamingfast.io/">
-	<img width="100%" src="https://github.com/streamingfast/substreams/blob/develop/docs/assets/substreams-banner.png" alt="StreamingFast Substreams Banner" />
-</a>
+# Tornado Cash Substream
+This substream's  aim is to show the Tornado Cash Vault Analytics by way of Tracking Deposits and withdrawal in usdc and eth. 
 
-# Substreams
+## Quickstart
 
-Substreams is a powerful blockchain indexing technology, developed for The Graph Network.
+Make sure you have the latest versions of the following installed:
 
-Substreams enables developers to write Rust modules, composing data streams alongside the community, and provides extremely high performance indexing by virtue of parallelization, in a streaming-first fashion.
-
-Substreams has all the benefits of StreamingFast Firehose, like low-cost caching and archiving of blockchain data, high throughput processing, and cursor-based reorgs handling.
-
-## Documentation
-
-Full documentation for installing, running and working with Substreams is available at: https://substreams.streamingfast.io.
-
-## Contributing
-
-**Please first refer to the general
-[StreamingFast contribution guide](https://github.com/streamingfast/streamingfast/blob/master/CONTRIBUTING.md)**,
-if you wish to contribute to this code base.
-
-
-## License
-
-[Apache 2.0](LICENSE)
-
-
-Consider store pruning: See Unsiwap V3 SPS and Curve Finance SPS
+- [Rust](https://rustup.rs/)
+- [Make](https://formulae.brew.sh/formula/make)
+- [graph-cli](https://thegraph.com/docs/en/cookbook/quick-start/#2-install-the-graph-cli)
+- [substreams-cli](https://substreams.streamingfast.io/getting-started/installing-the-cli)
 
 
 
+### 1. Compile the Project with `make build`
 
+We now need to recompile our WASM binary with the new changes we made to the rust files.
 
+### 2. Pack the spkg with `make package`
 
+We need to bundle the protobuf definitions and the WASM binary into a single file. This is what we will deploy the subgraph.
 
+### 3. Deploy the subgraph with `graph deploy`
 
+Modify the package.json to point to your subgraph.
+The deploy script will change if you are deploying to the hosted service or decentralized network, but replace this with the command that is appropriate for your setup.
 
+### 4. Schema
 
+```graphql
+type Account @entity {
+  id: ID!
+  holdings: BigDecimal!
+  sent: [Transfer!]! @derivedFrom(field: "sender")
+  received: [Transfer!]! @derivedFrom(field: "receiver")
+  approvals: [Approval!]! @derivedFrom(field: "owner")
+}
 
-Fix the decimals issue when setting deposits/withdrawals as we miss out on the decimal points usdc amounts.
-Update the ID of withdrawal so it aligns with deposits (use hash, but also include a field for nullifier hash).
-Remove commits related to keys.
-Align amounts naming convention.
-Add immutable decorator to relevant entities.
-Add pruning to enable time travel queries 
-Add relayer entity and relate it to withdrawals.
-Fix bug related to only one withdrawal being visible in subgraph query.
+type Transfer @entity(immutable: true) {
+  id: ID!
+  sender: Account
+  receiver: Account!
+  amount: String!
+  token: Token!
+  timestamp: BigInt!
+  txHash: String!
+  blockNumber: BigInt!
+  logIndex: BigInt!
+}
 
-Use Bytes type for ID fields where appropriate.
+type Approval @entity(immutable: true) {
+  id: ID!
+  spender: String!
+  owner: Account!
+  amount: String!
+  timestamp: BigInt!
+  token: Token!
+  txHash: String!
+  blockNumber: BigInt!
+  logIndex: BigInt!
+}
+
+type Token @entity {
+  id: ID!
+  name: String!
+  address: String!
+  symbol: String!
+  decimals: String!
+  transfers: [Transfer!]! @derivedFrom(field: "token")
+  approvals: [Approval!]! @derivedFrom(field: "token")
+}
+```
+
+### 5. Data Flow
+
+```mermaid
+graph TD;
+  map_transfer[map: map_transfer];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_transfer;
+  map_approval[map: map_approval];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_approval;
+  store_account_holdings[store: store_account_holdings];
+  map_transfer --> store_account_holdings;
+  store_token[store: store_token];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> store_token;
+  graph_out[map: graph_out];
+  map_transfer --> graph_out;
+  map_approval --> graph_out;
+  store_account_holdings -- deltas --> graph_out;
+  store_token -- deltas --> graph_out;
+
+```
