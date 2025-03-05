@@ -28,65 +28,86 @@ The deploy script will change if you are deploying to the hosted service or dece
 ### 4. Schema
 
 ```graphql
-type Account @entity {
+type PoolStats @entity  {
   id: ID!
-  holdings: BigDecimal!
-  sent: [Transfer!]! @derivedFrom(field: "sender")
-  received: [Transfer!]! @derivedFrom(field: "receiver")
-  approvals: [Approval!]! @derivedFrom(field: "owner")
+  totalDepositsInDollars: BigDecimal!
+  totalWithdrawalsInDollars: BigDecimal!
 }
 
-type Transfer @entity(immutable: true) {
-  id: ID!
-  sender: Account
-  receiver: Account!
-  amount: String!
-  token: Token!
-  timestamp: BigInt!
-  txHash: String!
+type Deposit @entity(immutable: true) {
+  id: ID! 
+  commitment: String!
   blockNumber: BigInt!
-  logIndex: BigInt!
-}
-
-type Approval @entity(immutable: true) {
-  id: ID!
-  spender: String!
-  owner: Account!
-  amount: String!
   timestamp: BigInt!
-  token: Token!
-  txHash: String!
-  blockNumber: BigInt!
-  logIndex: BigInt!
+  eth_amount: String!
+  from: String!
+  usdc_amount: String!
 }
 
-type Token @entity {
-  id: ID!
-  name: String!
-  address: String!
-  symbol: String!
-  decimals: String!
-  transfers: [Transfer!]! @derivedFrom(field: "token")
-  approvals: [Approval!]! @derivedFrom(field: "token")
+type Withdrawal @entity(immutable: true) {
+  id: ID! 
+  nullifier_hash: String!
+  to: String!
+  relayer: Relayer!
+  fee: String!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  eth_amount: String!
+  usdc_amount: String!
+ 
 }
+
+
+type Relayer @entity { 
+  id:ID!
+  withdrawal:[Withdrawal!]! @derivedFrom(field: "relayer")
+}
+
+
 ```
 
 ### 5. Data Flow
 
 ```mermaid
 graph TD;
-  map_transfer[map: map_transfer];
-  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_transfer;
-  map_approval[map: map_approval];
-  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> map_approval;
-  store_account_holdings[store: store_account_holdings];
-  map_transfer --> store_account_holdings;
-  store_token[store: store_token];
-  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> store_token;
+  tornado_event_mapper[map: tornado_event_mapper];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> tornado_event_mapper;
+  chainlink_prices:chainlink_price_store --> tornado_event_mapper;
+  store_additive_metrics[store: store_additive_metrics];
+  tornado_event_mapper --> store_additive_metrics;
   graph_out[map: graph_out];
-  map_transfer --> graph_out;
-  map_approval --> graph_out;
-  store_account_holdings -- deltas --> graph_out;
-  store_token -- deltas --> graph_out;
+  tornado_event_mapper --> graph_out;
+  store_additive_metrics --> graph_out;
+  ethcommon:all_events[map: ethcommon:all_events];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> ethcommon:all_events;
+  ethcommon:all_calls[map: ethcommon:all_calls];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> ethcommon:all_calls;
+  ethcommon:all_events --> ethcommon:index_events;
+  ethcommon:all_calls --> ethcommon:index_calls;
+  ethcommon:all_events --> ethcommon:index_events_and_calls;
+  ethcommon:all_calls --> ethcommon:index_events_and_calls;
+  ethcommon:filtered_events[map: ethcommon:filtered_events];
+  ethcommon:filtered_events:params[params] --> ethcommon:filtered_events;
+  ethcommon:all_events --> ethcommon:filtered_events;
+  ethcommon:filtered_calls[map: ethcommon:filtered_calls];
+  ethcommon:filtered_calls:params[params] --> ethcommon:filtered_calls;
+  ethcommon:all_calls --> ethcommon:filtered_calls;
+  ethcommon:filtered_transactions[map: ethcommon:filtered_transactions];
+  ethcommon:filtered_transactions:params[params] --> ethcommon:filtered_transactions;
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> ethcommon:filtered_transactions;
+  ethcommon:filtered_events_and_calls[map: ethcommon:filtered_events_and_calls];
+  ethcommon:filtered_events_and_calls:params[params] --> ethcommon:filtered_events_and_calls;
+  ethcommon:all_events --> ethcommon:filtered_events_and_calls;
+  ethcommon:all_calls --> ethcommon:filtered_events_and_calls;
+  chainlink_prices:store_confirmed_feeds[store: chainlink_prices:store_confirmed_feeds];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> chainlink_prices:store_confirmed_feeds;
+  chainlink_prices:get_chainlink_answers[map: chainlink_prices:get_chainlink_answers];
+  sf.ethereum.type.v2.Block[source: sf.ethereum.type.v2.Block] --> chainlink_prices:get_chainlink_answers;
+  chainlink_prices:store_confirmed_feeds --> chainlink_prices:get_chainlink_answers;
+  chainlink_prices:chainlink_price_store[store: chainlink_prices:chainlink_price_store];
+  chainlink_prices:get_chainlink_answers --> chainlink_prices:chainlink_price_store;
+  chainlink_prices:graph_out[map: chainlink_prices:graph_out];
+  chainlink_prices:get_chainlink_answers --> chainlink_prices:graph_out;
+
 
 ```
