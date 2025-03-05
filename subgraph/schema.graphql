@@ -5,7 +5,7 @@ type PoolStats @entity  {
 }
 
 type Deposit @entity(immutable: true) {
-  id: ID! # Transaction hash
+  id: ID! 
   commitment: String!
   blockNumber: BigInt!
   timestamp: BigInt!
@@ -15,7 +15,7 @@ type Deposit @entity(immutable: true) {
 }
 
 type Withdrawal @entity(immutable: true) {
-  id: ID! # Transaction hash
+  id: ID! 
   nullifier_hash: String!
   to: String!
   relayer: Relayer!
