@@ -28,14 +28,16 @@ The deploy script will change if you are deploying to the hosted service or dece
 ### 4. Schema
 
 ```graphql
+
+
 type PoolStats @entity  {
-  id: ID!
+  id: Bytes!
   totalDepositsInDollars: BigDecimal!
   totalWithdrawalsInDollars: BigDecimal!
 }
 
 type Deposit @entity(immutable: true) {
-  id: ID! 
+  id: Bytes! 
   commitment: String!
   blockNumber: BigInt!
   timestamp: BigInt!
@@ -45,7 +47,7 @@ type Deposit @entity(immutable: true) {
 }
 
 type Withdrawal @entity(immutable: true) {
-  id: ID! 
+  id: Bytes! 
   nullifier_hash: String!
   to: String!
   relayer: Relayer!

@@ -294,7 +294,7 @@ pub fn graph_out(
  
 
     tables
-    .create_row("PoolStats", "pool_stats")
+    .create_row("PoolStats", Hex::encode("pool_stats"))
     .set("totalDepositsInDollars", total_deposits)
     .set("totalWithdrawalsInDollars", total_withdrawals);
   
@@ -305,7 +305,7 @@ pub fn graph_out(
 
     for deposit in events.deposits {
         tables
-            .create_row("Deposit", &deposit.txn_hash) 
+            .create_row("Deposit", Hex::encode(&deposit.txn_hash))
             .set("commitment", deposit.commitment)
             .set("blockNumber", deposit.block_number)
             .set("timestamp", deposit.block_time.unwrap().seconds)
@@ -315,19 +315,23 @@ pub fn graph_out(
     }
 
     for withdrawal in events.withdrawals {
+
+        let relayer_id = withdrawal.relayer; 
         tables
-            .create_row("Withdrawal",&withdrawal.txn_hash)
+            .create_row("Withdrawal",Hex::encode(&withdrawal.txn_hash))
             .set("nullifier_hash" ,&withdrawal.nullifier_hash)
             .set("to", withdrawal.to)
-            .set("relayer", &withdrawal.relayer)
+            .set("relayer", relayer_id.clone())
             .set("fee", withdrawal.fee)
             .set("blockNumber", withdrawal.block_number)
             .set("timestamp", withdrawal.block_time.unwrap().seconds)
             .set("eth_amount", withdrawal.eth_amount)
             .set("usdc_amount",withdrawal.usdc_amount);
 
+
+
         tables
-            .create_row("Relayer", &withdrawal.relayer);
+            .create_row("Relayer", relayer_id.clone());
             
 
 
