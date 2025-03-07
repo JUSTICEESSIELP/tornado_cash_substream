@@ -1,7 +1,7 @@
 specVersion: v0.1.0
 package:
   name: tornado_cash_analytics
-  version: v0.2.0
+  version: v0.3.0
   url: https://github.com/JUSTICEESSIELP/tornado_cash_substream
   doc: Analytics for Tornado Cash ZK pools
 
@@ -39,7 +39,7 @@ modules:
     kind: store
     initialBlock: 12724681
     updatePolicy: add
-    valueType: int64
+    valueType: bigdecimal
     inputs:
       - map: tornado_event_mapper
       

@@ -22,11 +22,11 @@ pub struct Deposit {
     #[prost(uint32, tag="4")]
     pub log_index: u32,
     #[prost(string, tag="5")]
-    pub amount: ::prost::alloc::string::String,
+    pub eth_amount: ::prost::alloc::string::String,
     #[prost(string, tag="6")]
     pub from: ::prost::alloc::string::String,
-    #[prost(string, tag="7")]
-    pub hash: ::prost::alloc::string::String,
+    #[prost(bytes="vec", tag="7")]
+    pub txn_hash: ::prost::alloc::vec::Vec<u8>,
     #[prost(string, tag="8")]
     pub usdc_amount: ::prost::alloc::string::String,
 }
@@ -40,8 +40,8 @@ pub struct Withdrawal {
     #[prost(string, tag="2")]
     pub to: ::prost::alloc::string::String,
     /// Changed to string for hex encoding
-    #[prost(string, tag="3")]
-    pub relayer: ::prost::alloc::string::String,
+    #[prost(bytes="vec", tag="3")]
+    pub relayer: ::prost::alloc::vec::Vec<u8>,
     #[prost(string, tag="4")]
     pub fee: ::prost::alloc::string::String,
     #[prost(uint64, tag="5")]
@@ -52,8 +52,10 @@ pub struct Withdrawal {
     #[prost(uint32, tag="7")]
     pub log_index: u32,
     #[prost(string, tag="8")]
-    pub amount: ::prost::alloc::string::String,
+    pub eth_amount: ::prost::alloc::string::String,
     #[prost(string, tag="9")]
     pub usdc_amount: ::prost::alloc::string::String,
+    #[prost(bytes="vec", tag="10")]
+    pub txn_hash: ::prost::alloc::vec::Vec<u8>,
 }
 // @@protoc_insertion_point(module)

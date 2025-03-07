@@ -1,7 +1,7 @@
-./target
+/target/
 *.spkg
 /build
 debug.log
-replay.log
+./replay.log
 .env
 ./subgraph/build

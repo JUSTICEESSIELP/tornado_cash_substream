@@ -1,27 +1,34 @@
-type PoolStats @entity {
-  id: ID!
-  totalDepositsInDollars: BigInt!
-  totalWithdrawalsInDollars: BigInt!
+type PoolStats @entity  {
+  id: Bytes!
+  totalDepositsInDollars: BigDecimal!
+  totalWithdrawalsInDollars: BigDecimal!
 }
 
-type Deposit @entity {
-  id: ID!
+type Deposit @entity(immutable: true) {
+  id: Bytes! 
   commitment: String!
   blockNumber: BigInt!
   timestamp: BigInt!
-  amount: String!
+  eth_amount: BigDecimal!
   from: String!
-  usdc_amount:String!
+  usdc_amount: BigDecimal!
 }
 
-type Withdrawal @entity {
-  id: ID!
+type Withdrawal @entity(immutable: true) {
+  id: Bytes! 
+  nullifier_hash: String!
   to: String!
-  relayer: String!
+  relayer: Relayer!
   fee: String!
   blockNumber: BigInt!
   timestamp: BigInt!
-  withdraw_eth_amount: String!
-  withdraw_usdc_amount: String!
+  eth_amount: BigDecimal!
+  usdc_amount: BigDecimal!
+}
+
+
+type Relayer @entity { 
+  id:Bytes!
+  withdrawal:[Withdrawal!]! @derivedFrom(field: "relayer")
 }
 

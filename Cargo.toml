@@ -20,6 +20,8 @@ substreams-ethereum = "0.10.2"
 substreams-database-change = "2.0"
 substreams-entity-change = "2.0"
 bigdecimal = "0.4.7"
+rust_decimal = "1.36.0"
+rust_decimal_macros = "1.36.0"
 
 
 # Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown

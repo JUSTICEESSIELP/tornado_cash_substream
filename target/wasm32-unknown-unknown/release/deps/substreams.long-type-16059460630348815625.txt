@@ -1,1 +1,0 @@
-substreams_ethereum_core::pb::generated::sf::ethereum::r#type::v2::BigInt

@@ -5,10 +5,11 @@ use hex_literal::hex;
 use num_bigint::BigUint;
 use std::ops::Mul;
 use std::str::FromStr;
+use std::str;
 use substreams::errors::Error;
 use substreams::scalar::{BigDecimal};
 use substreams::store::StoreNew;
-use substreams::store::{StoreAdd, StoreAddInt64, StoreGet, StoreGetBigDecimal, StoreGetInt64};
+use substreams::store::{StoreAdd,StoreDelete, StoreGetBigDecimal,StoreAddBigDecimal, StoreGet};
 use substreams::Hex;
 use substreams_entity_change::pb::entity::EntityChanges;
 use substreams_entity_change::tables::Tables as EntityChangesTable;
@@ -17,6 +18,7 @@ use substreams_ethereum::pb::eth::v2 as eth;
 // Contract address for the ZK pool
 const TORNADO_POOL_ADDRESS: [u8; 20] = hex!("722122dF12D4e14e13Ac3b6895a86e84145b6967");
 const PRECISION_FACTOR: u64 = 1_000_000_000_000_000_000_u64;
+
 
 
 substreams_ethereum::init!();
@@ -47,7 +49,7 @@ fn tornado_event_mapper(
     };
     for receipt_view in block.receipts() {
         let receipt = &receipt_view.receipt;
-        let transaction = &receipt_view.transaction; // Get the transaction
+        let transaction = &receipt_view.transaction; 
 
 
         for log in &receipt.logs {
@@ -81,24 +83,26 @@ fn tornado_event_mapper(
                     let amount_usd = eth_usd_rate.clone().mul(convert_amount);
                     substreams::log::info!("Calculated USD amount: {}", amount_usd);
 
-                    let from = Hex::encode(&transaction.from); // & needed here
+                    let from = Hex::encode(&transaction.from);
+               
                     let commitment = Hex::encode(deposit_event.commitment);
-                    let hash = Hex::encode(&transaction.hash); // Unwrap hash safely
+                   
+                     let hash = transaction.hash.clone();
+                    // let hash = Hex::encode(&transaction.hash); 
 
                     tornado_events.deposits.push(Deposit {
                         commitment,
                         block_number: block.number,
                         block_time: Some(block.timestamp().to_owned()),
                         log_index: log.block_index,
-                        amount,
+                        eth_amount:amount,
                         from,
-                        hash,
+                        txn_hash:hash,
                         usdc_amount: amount_usd.to_string(),
                     });
                 }
 
-                if let Some(withdrawal_event) =
-                    abi::tornado_cash::events::Withdrawal::decode(log).ok()
+                if let Some(withdrawal_event) =abi::tornado_cash::events::Withdrawal::decode(log).ok()
                 {
                     let withdraw_amount_eth =
                         transaction.value.as_ref().map_or("0".to_string(), |v| {
@@ -107,7 +111,7 @@ fn tornado_event_mapper(
 
                             match amount_str.parse::<u64>() {
                                 Ok(val) => {
-                                    let result = val / PRECISION_FACTOR; // Integer division
+                                    let result = val / PRECISION_FACTOR; 
                                     result.to_string()
                                 }
                                 Err(e) => {
@@ -121,14 +125,14 @@ fn tornado_event_mapper(
                             }
                         });
 
+
+                        
                     let withdraw_convert_amount =
                         BigDecimal::from_str(&withdraw_amount_eth).unwrap_or(BigDecimal::from(0));
                     let withdraw_convert_amount_clone = withdraw_convert_amount.clone();
                     let withrawal_amount_usd = eth_usd_rate.clone().mul(withdraw_convert_amount_clone);
 
-                    // Add debug logging
-
-                    // let withdraw_amount_usdc =
+               
                     let fee_str = withdrawal_event.fee.to_string();
                     let fee = match fee_str.parse::<u64>() {
                         Ok(f) => f,
@@ -138,13 +142,19 @@ fn tornado_event_mapper(
                                 fee_str,
                                 e
                             );
-                            0 // Or handle the error as you see fit (return an error, skip the event, etc.)
+                            0 
                         }
                     };
 
+
+                    
+
+
                     let nullifier_hash = Hex::encode(withdrawal_event.nullifier_hash);
-                    let to = Hex::encode(withdrawal_event.to);
-                    let relayer = Hex::encode(withdrawal_event.relayer);
+                    // let relayer = String::from(str::from_utf8(&withdrawal_event.relayer).ok().unwrap());
+                    let to = Hex::encode(&withdrawal_event.to);
+                    let relayer = withdrawal_event.relayer;
+                    
 
                     tornado_events.withdrawals.push(Withdrawal {
                         nullifier_hash,
@@ -154,72 +164,74 @@ fn tornado_event_mapper(
                         block_number: block.number,
                         block_time: Some(block.timestamp().to_owned()),
                         log_index: log.block_index,
-                        amount: withdraw_amount_eth,
+                        eth_amount: withdraw_amount_eth,
                         usdc_amount: withrawal_amount_usd.to_string(),
+                        txn_hash: transaction.hash.clone(),
                     });
                 }
             }
+            
         }
     }
 
     Ok(Some(tornado_events))
 }
 
+
+
+  
+ 
 #[substreams::handlers::store]
-pub fn store_additive_metrics(events: TornadoEvents, output: StoreAddInt64) {
+pub fn store_additive_metrics(events: TornadoEvents, output: StoreAddBigDecimal) {
     for deposit_event in events.deposits {
         if let Some(block_time) = deposit_event.block_time {
             let log_ordinal = deposit_event.log_index as u64;
 
-            // Debug the incoming USDC amount
+
+            let hour = block_time.seconds / 3600;
+         
+            let day = block_time.seconds / 86400;
+
+       
+            let one_hour_ago  = hour - 1;
+            let one_day_ago = day - 1;
+
+
+
+            output.delete_prefix(log_ordinal.try_into().unwrap(),  &format!("deposits_hour:{}", one_hour_ago));
+            output.delete_prefix(log_ordinal.try_into().unwrap(),   &format!("deposits_day:{}", one_day_ago));
+            
             substreams::log::info!("Raw USDC amount from deposit: {}", &deposit_event.usdc_amount);
 
-            // Convert the decimal string to a value we can store
-            let total_usdc_amount_deposited = match deposit_event.usdc_amount.split('.').next() {
-                Some(whole_part) => {
-                    match whole_part.parse::<i64>() {
-                        Ok(amount) => {
-                            substreams::log::info!("Successfully parsed deposit amount: {}", amount);
-                            amount
-                        },
-                        Err(e) => {
-                            substreams::log::info!("Failed to parse deposit amount: {}", e);
-                            0_i64
-                        }
-                    }
-                },
-                None => 0_i64
-            };
+     
 
-            // Log the value being stored
-            substreams::log::info!(
-                "Storing deposit - Ordinal: {}, Amount: {}", 
-                log_ordinal,
-                total_usdc_amount_deposited
-            );
+          
 
-            // Store the value with explicit ordinal
-            output.add(
-                0,
-                "total_deposits",
-                total_usdc_amount_deposited,
-            );
 
-            
-            let hour = block_time.seconds / 3600;
-            output.add(
-                0, 
-                &format!("deposits_hour:{}", hour), 
-                total_usdc_amount_deposited 
-            );
+             
 
-            // Add daily metrics
-            let day = block_time.seconds / 86400;
-            output.add(
-                0, 
-                &format!("deposits_day:{}", day), 
-                total_usdc_amount_deposited 
-            );
+             if let Some(converted_usdc_amount) = BigDecimal::from_str(&deposit_event.usdc_amount).ok() {
+                output.add(0, "total_deposits", converted_usdc_amount.clone());
+
+                    output.add(
+                            log_ordinal, 
+                            &format!("deposits_hour:{}", hour), 
+                            converted_usdc_amount.clone()
+                        );
+
+             output.add(
+                    log_ordinal, 
+                    &format!("deposits_day:{}", day), 
+                    converted_usdc_amount
+                );
+            } else {
+                substreams::log::info!("Failed to parse USDC amount: {}", &deposit_event.usdc_amount);
+            }
+
+
+
+           
+
         }
     }
 
@@ -230,63 +242,44 @@ pub fn store_additive_metrics(events: TornadoEvents, output: StoreAddInt64) {
 
             substreams::log::info!("Raw USDC amount from withdrawal: {}", &withdraw_event.usdc_amount);
 
-            let total_usdc_amount_withdraw = match withdraw_event.usdc_amount.split('.').next() {
-                Some(whole_part) => {
-                    match whole_part.parse::<i64>() {
-                        Ok(amount) => {
-                            substreams::log::info!("Successfully parsed withdrawal amount: {}", amount);
-                            amount
-                        },
-                        Err(e) => {
-                            substreams::log::info!("Failed to parse withdrawal amount: {}", e);
-                            0_i64
-                        }
-                    }
-                },
-                None => 0_i64
-            };
 
-            substreams::log::info!(
-                "Storing withdrawal - Ordinal: {}, Amount: {}", 
-                log_ordinal,
-                total_usdc_amount_withdraw
-            );
-
-            output.add(0, "total_withdrawals", total_usdc_amount_withdraw);
-
-           
             let hour = block_time.seconds / 3600;
+          
             let day = block_time.seconds / 86400;
 
-            output.add(
+       
+            let one_hour_ago  = hour - 1;
+            let one_day_ago = day - 1;
+       
+
+            output.delete_prefix(log_ordinal.try_into().unwrap(), &format!("withdrawals_hour:{}", one_hour_ago.clone()));
+            output.delete_prefix(log_ordinal.try_into().unwrap(), &format!("withdrawals_day:{}", one_day_ago.clone()));
+
+            
+        
+
+            if let Some(converted_usdc_amount) = BigDecimal::from_str( &withdraw_event.usdc_amount).ok(){
+                output.add(0, "total_withdrawals", converted_usdc_amount.clone());
+
+                      output.add(
                 log_ordinal, 
-                &format!("withdrawals_hour:{}", hour), 
-                total_usdc_amount_withdraw
+                &format!("withdrawals_hour:{}", one_hour_ago), 
+            converted_usdc_amount.clone()
             );
             
             output.add(
                 log_ordinal, 
-                &format!("withdrawals_day:{}", day),
-                total_usdc_amount_withdraw
+                &format!("withdrawals_day:{}", one_day_ago),
+                converted_usdc_amount.clone()
             );
 
-         
-            if let Ok(fee) = withdraw_event.fee.parse::<i64>() {
-                output.add(log_ordinal, "total_fees_to_withdraw", fee);
+            } else {
+                substreams::log::info!("Failed to parse USDC amount: {}", &withdraw_event.usdc_amount);
             }
-
-           
-            output.add(
-                log_ordinal,
-                &format!("relayer_withdrawals:{}", withdraw_event.relayer),
-                1,
-            );
-
-            output.add(
-                log_ordinal,
-                &format!("recipient_withdrawals:{}", withdraw_event.to),
-                1,
-            );
+             
+             
+          
+         
         }
     }
 }
@@ -295,10 +288,9 @@ pub fn store_additive_metrics(events: TornadoEvents, output: StoreAddInt64) {
 #[substreams::handlers::map]
 pub fn graph_out(
     events: TornadoEvents,
-    store: StoreGetInt64,
+    store: StoreGetBigDecimal,
 ) -> Result<EntityChanges, substreams::errors::Error> {
-    // hash map of name to a table
-
+ 
     let mut tables  = EntityChangesTable::new();
 
        
@@ -313,7 +305,7 @@ pub fn graph_out(
  
 
     tables
-    .create_row("PoolStats", "pool_stats")
+    .create_row("PoolStats", Hex::encode("pool_stats"))
     .set("totalDepositsInDollars", total_deposits)
     .set("totalWithdrawalsInDollars", total_withdrawals);
   
@@ -323,26 +315,61 @@ pub fn graph_out(
      
 
     for deposit in events.deposits {
+
+       let eth_amount = BigDecimal::from_str(deposit.eth_amount.as_str())
+            .unwrap()
+            .with_prec(10);
+
+        let usdc_amount = BigDecimal::from_str(deposit.usdc_amount.as_str())
+        .unwrap()
+        .with_prec(10);
+
+
         tables
-            .create_row("Deposit", &deposit.hash) // Using hash as unique ID
+            .create_row("Deposit", Hex::encode(&deposit.txn_hash))
             .set("commitment", deposit.commitment)
             .set("blockNumber", deposit.block_number)
             .set("timestamp", deposit.block_time.unwrap().seconds)
-            .set("amount", deposit.amount)
+            .set("eth_amount", eth_amount)
             .set("from", deposit.from)
-            .set("usdc_amount",deposit.usdc_amount);
+            .set("usdc_amount",usdc_amount);
     }
 
+
     for withdrawal in events.withdrawals {
+
+        let relayer_id = withdrawal.relayer;
+        // let relayer_id = Hex::encode(withdrawal.relayer);
+
+
+
+
+        let usdc_amount = BigDecimal::from_str(withdrawal.usdc_amount.as_str())
+        .unwrap()
+        .with_prec(10);
+
+
+         let eth_amount =   BigDecimal::from_str(withdrawal.eth_amount.as_str()).unwrap().with_prec(10);
+
+
         tables
-            .create_row("Withdrawal", &withdrawal.nullifier_hash) // Using nullifier_hash as unique ID
+            .create_row("Withdrawal",Hex::encode(&withdrawal.txn_hash))
+            .set("nullifier_hash" ,&withdrawal.nullifier_hash)
             .set("to", withdrawal.to)
-            .set("relayer", withdrawal.relayer)
+            .set("relayer", relayer_id.clone())
             .set("fee", withdrawal.fee)
             .set("blockNumber", withdrawal.block_number)
             .set("timestamp", withdrawal.block_time.unwrap().seconds)
-            .set("withdraw_eth_amount", withdrawal.amount)
-            .set("withdraw_usdc_amount",withdrawal.usdc_amount);
+            .set("eth_amount", eth_amount)
+            .set("usdc_amount",usdc_amount);
+
+
+
+        tables
+            .create_row("Relayer", Hex::encode(relayer_id.clone()));
+            
+
+
     }
 
 
